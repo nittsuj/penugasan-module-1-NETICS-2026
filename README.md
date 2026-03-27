@@ -76,4 +76,105 @@ CMD ["node", "dist/server.js"]
 
 ### CI/CD Pipeline
 
+```yml
+name: CI/CD Pipeline NETICS 2026
 
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set lower case repository name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin            
+            
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            
+            docker rm -f netics-api-justin || true
+            docker run -d --name netics-api-justin -p 8081:3000 --restart always ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+```
+
+```yml
+---
+- name: Setup Nginx Reverse Proxy for NETICS API
+  hosts: vps
+  become: yes
+  tasks:
+    - name: Ensure Nginx is installed
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Create Nginx configuration for the API
+      copy:
+        dest: /etc/nginx/sites-available/netics-api-justin
+        content: |
+          server {
+              listen 81;
+              server_name _;
+
+              location / {
+                  proxy_pass http://127.0.0.1:8081;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_cache_bypass $http_upgrade;
+              }
+          }
+
+    - name: Enable the Nginx site configuration
+      file:
+        src: /etc/nginx/sites-available/netics-api-justin
+        dest: /etc/nginx/sites-enabled/netics-api-justin
+        state: link
+
+    - name: Remove default Nginx site configuration (to avoid conflicts)
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Restart and enable Nginx service
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes
+```
