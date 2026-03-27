@@ -1,0 +1,45 @@
+---
+- name: Setup Nginx Reverse Proxy for NETICS API
+  hosts: vps
+  become: yes
+  tasks:
+    - name: Ensure Nginx is installed
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Create Nginx configuration for the API
+      copy:
+        dest: /etc/nginx/sites-available/netics-api-justin
+        content: |
+          server {
+              listen 81;
+              server_name _;
+
+              location / {
+                  proxy_pass http://127.0.0.1:8081;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_cache_bypass $http_upgrade;
+              }
+          }
+
+    - name: Enable the Nginx site configuration
+      file:
+        src: /etc/nginx/sites-available/netics-api-justin
+        dest: /etc/nginx/sites-enabled/netics-api-justin
+        state: link
+
+    - name: Remove default Nginx site configuration (to avoid conflicts)
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Restart and enable Nginx service
+      service:
+        name: nginx
+        state: restarted
+        enabled: yes
