@@ -45,6 +45,7 @@ app.listen(PORT, '0.0.0.0', () => {
 Pada pembuatan API, digunakan NodeJS sebagai Runtime Environment, Express.js sebagai Framework, dan TypeScript sebagai bahasa pemrogramannya, untuk _type safety_.
 
 ### Setting Up the Environment
+- Dockerfile
 ```Dockerfile
 FROM node:20-alpine AS builder
 
@@ -76,6 +77,7 @@ CMD ["node", "dist/server.js"]
 
 ### CI/CD Pipeline
 
+- .github/workflows/deploy.yml
 ```yml
 name: CI/CD Pipeline NETICS 2026
 
@@ -130,6 +132,8 @@ jobs:
             docker rm -f netics-api-justin || true
             docker run -d --name netics-api-justin -p 8081:3000 --restart always ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 ```
+
+- ansible/playbook.yml
 
 ```yml
 ---
