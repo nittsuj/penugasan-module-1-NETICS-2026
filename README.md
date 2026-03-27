@@ -42,7 +42,9 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 ```
 
-Pada pembuatan API, digunakan NodeJS sebagai Runtime Environment, Express.js sebagai Framework, dan TypeScript sebagai bahasa pemrogramannya, untuk _type safety_.
+Pada pembuatan API, digunakan NodeJS sebagai Runtime Environment, Express.js sebagai Framework, dan TypeScript sebagai bahasa pemrogramannya, untuk _type safety_. \ 
+
+Endpoint /health berfungsi sebagai Health Check yang mengembalikan JSON berisi data identitas (Nama, NRP), timestamp, dan kalkulasi uptime server. Penerapan binding alamat 0.0.0.0 pada port 3000 memastikan aplikasi di dalam kontainer Docker dapat menerima trafik dari reverse proxy Nginx.
 
 ### Setting Up the Environment
 - Dockerfile
@@ -74,6 +76,9 @@ EXPOSE 3000
 
 CMD ["node", "dist/server.js"]
 ```
+
+Menggunakan base image node:20-alpine untuk menginstal seluruh dependensi dan melakukan build TypeScript menjadi JavaScript murni ke dalam folder dist. \
+Membuat image baru, lalu hanya copy hasil kompilasi dari hasil build dan menginstal dependensi production (--omit=dev).
 
 ### CI/CD Pipeline
 
@@ -133,6 +138,9 @@ jobs:
             docker run -d --name netics-api-justin -p 8081:3000 --restart always ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 ```
 
+Build & Push: Mengkompilasi image Docker berdasarkan Dockerfile dan upload ke GHCR \
+Automated Deployment: Connect SSH ke VPS Azure menggunakan secrets
+
 - ansible/playbook.yml
 
 ```yml
@@ -182,3 +190,7 @@ jobs:
         state: restarted
         enabled: yes
 ```
+
+Ansible Playbook digunakan untuk mengotomatisasi konfigurasi Reverse Proxy pada server tanpa harus masuk secara manual. Playbook ini menginstruksikan VPS untuk menginstal Nginx dan membuat konfigurasi server block baru yang mendengarkan pada Port 81 (sebagai pembeda dari layanan default). \
+
+Trafik dari luar yang masuk melalui port 81 kemudian diteruskan (proxy pass) ke alamat internal 127.0.0.1:8081, tempat kontainer Docker berada.
