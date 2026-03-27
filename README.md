@@ -194,3 +194,8 @@ Automated Deployment: Connect SSH ke VPS Azure menggunakan secrets
 Ansible Playbook digunakan untuk mengotomatisasi konfigurasi Reverse Proxy pada server tanpa harus masuk secara manual. Playbook ini menginstruksikan VPS untuk menginstal Nginx dan membuat konfigurasi server block baru yang mendengarkan pada Port 81 (sebagai pembeda dari layanan default). \
 
 Trafik dari luar yang masuk melalui port 81 kemudian diteruskan (proxy pass) ke alamat internal 127.0.0.1:8081, tempat kontainer Docker berada.
+
+### RESULT
+<img title="a title" alt="Alt text" src="/assets/proof-deploy.png"> 
+
+<img title="a title" alt="Alt text" src="/assets/docker.png"> 
