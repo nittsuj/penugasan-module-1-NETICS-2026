@@ -1,0 +1,33 @@
+{
+  "name": "penugasan-module-1-netics-2026",
+  "version": "1.0.0",
+  "description": "Nama: Justin Valentino \\ NRP: 5025241234  \\",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --loader ts-node/esm src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nittsuj/penugasan-module-1-NETICS-2026.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/nittsuj/penugasan-module-1-NETICS-2026/issues"
+  },
+  "homepage": "https://github.com/nittsuj/penugasan-module-1-NETICS-2026#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
+  }
+}
